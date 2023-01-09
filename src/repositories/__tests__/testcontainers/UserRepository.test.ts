@@ -1,10 +1,20 @@
-import { UserRepository } from '../UserRepository';
-import { initializeMongoDb } from '../../configurations/mongodb/MongoDBConnection';
+import { MongoDBContainer } from 'testcontainers';
+import { Config } from '../../../configurations/Config';
+import { initializeMongoDb } from '../../../configurations/mongodb/MongoDBConnection';
+import { UserRepository } from '../../UserRepository';
 
-describe('UserRepository without Test Containers', () => {
+describe('UserRepository with Test Containers', () => {
+  let mongodbContainer;
 
   beforeAll(async () => {
+    mongodbContainer = await new MongoDBContainer('mongo:4.4.6').start();
+    Config.dataBase.port = mongodbContainer.getMappedPort(27017);
+    Config.dataBase.host = mongodbContainer.getHost();
     await initializeMongoDb();
+  }, 100000);
+
+  afterAll(async () => {
+    await mongodbContainer.stop();
   });
 
   it('should insert user', async () => {
@@ -38,4 +48,5 @@ describe('UserRepository without Test Containers', () => {
 
     expect(users.length).toEqual(0);
   });
+
 });
